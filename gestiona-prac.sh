@@ -95,6 +95,8 @@ do
                 then
                     nom_fichero="`echo $asignatura | tr '[:upper:]' '[:lower:]'`-`date '+%y%m%d-%k%M'`.tgz"
                     read -p "$nom_fichero"
+                    actual_path=`pwd`
+                    cd $path_practicas
                 fi;
             else
                 error_log "La ruta de las prácticas no existe."
