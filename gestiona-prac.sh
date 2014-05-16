@@ -43,6 +43,12 @@ function register_cron
     return 0
 }
 
+function findPacticeFile
+{
+    asignatura=$1
+    
+}
+
 displayMenu
 submenu=$?
 
@@ -94,15 +100,24 @@ do
                 if [ "$result" = "s" ]
                 then
                     nom_fichero="`echo $asignatura | tr '[:upper:]' '[:lower:]'`-`date '+%y%m%d-%k%M'`.tgz"
-                    read -p "$nom_fichero"
                     actual_path=`pwd`
                     cd $path_practicas
+                    tar -czf $nom_fichero $path_practicas &> /dev/null
+                    cd $actual_path
+                    read -p "Se ha generado el fichero $nom_fichero en el directorio de la asignatura"
                 fi;
             else
                 error_log "La ruta de las prácticas no existe."
                 read -p "La ruta de las prácticas no existe."
             fi;
         ;;
+        3)
+            echo 'Menú 3 - Obtener tamaño y fecha del fichero'
+            read -p 'Asignatura sobre la que queremos información'
+            
+            
+            find / -type f -name "aso-*-*.tgz" -exec ls  '{}' \; 2>/dev/null | sort | head
+            
     esac
     
     displayMenu
