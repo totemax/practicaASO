@@ -39,14 +39,27 @@ function error_log
 function register_cron
 {
     
-    #todo: implementar
+    hora_insert=$1
+    path_alumnos=$2
+    path_almacen=$3
+    cron_minute=`date -d $hora "+%M"`
+    cron_hour=`date -d $hora "+%k"`
+    actual_path=`pwd`
+    rm ./temp_cron
+    cron_string="`echo $cron_minute $cron_hour \* \* \* $actual_path/recoge_prac.sh $path_alumnos $path_almacen`"
+    echo "$cron_string"
+    crontab -l > ./temp_cron
+    echo "$cron_string" > ./temp_cron
+    crontab ./temp_cron
     return 0
 }
 
 function findPacticeFile
 {
     asignatura=$1
-    
+    file=`find / -type f -name "$asignatura-*-*.tgz" -exec ls  '{}' \; 2>/dev/null | sort -r | head -1`
+    echo $file
+    return 0
 }
 
 displayMenu
@@ -113,11 +126,35 @@ do
         ;;
         3)
             echo 'Menú 3 - Obtener tamaño y fecha del fichero'
-            read -p 'Asignatura sobre la que queremos información'
-            
-            
-            find / -type f -name "aso-*-*.tgz" -exec ls  '{}' \; 2>/dev/null | sort | head
-            
+            read -p 'Asignatura sobre la que queremos información: ' asignatura
+            asignatura="`echo $asignatura | tr '[:upper:]' '[:lower:]'`"
+            file=`findPacticeFile $asignatura`
+            filename=`basename "$file"`
+            tamano=`du -b "$file" | cut -f -1`
+            read -p "El fichero generado es $filename y ocupa $tamano bytes"
+        ;;
+        4)
+            echo 'Menú 4 – Enviar backup al servidor'
+            read -p 'Asignatura cuyo backup queremos enviar: ' asignatura
+            asignatura="`echo $asignatura | tr '[:upper:]' '[:lower:]'`"
+            file=`findPacticeFile $asignatura`
+            read -p 'Servidor al que desea enviar backup (dominio por omisión: eui.upm.es): ' dominio
+            if [ "$dominio" = "" ]
+            then
+                dominio="eui.upm.es"
+            fi;
+            read -p 'Usuario en el servidor del backup:' user
+            connection_string="$file $user@$dominio"
+            echo $connection_string
+            scp $connection_string
+            result=$?
+            if [ $result -eq 0 ]
+            then 
+                read -p 'Se ha subido el fichero correctamente!'
+            else
+                read -p 'Ocurrió un error durante la subida!'
+                error_log "Ocurrió un error durante la subida del fichero $file al servidor $dominio"
+            fi
     esac
     
     displayMenu
